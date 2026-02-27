@@ -1,6 +1,5 @@
 import fastify from 'fastify';
-import cors from '@fastify/cors';
-import helmet from '@fastify/helmet';
+import FastifyCors from '@fastify/cors';
 
 import animeRouter from './routes/anime';
 import mangaRouter from './routes/manga';
@@ -18,19 +17,13 @@ const start = async (): Promise<void> => {
     logger: true,
   });
 
-  // ✅ CORS — allow all origins so Cloudflare Pages can call this API
-  await app.register(cors, {
+  // ✅ Allow all origins so Cloudflare Pages can access this API
+  await app.register(FastifyCors, {
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    credentials: false,
   });
 
-  await app.register(helmet, {
-    contentSecurityPolicy: false,
-  });
-
-  app.get('/', async (_, reply) => {
+  app.get('/', async (request, reply) => {
     reply.status(200).send({ message: 'Welcome to consumet api! 🎉' });
   });
 
@@ -43,9 +36,9 @@ const start = async (): Promise<void> => {
   await app.register(newsRouter, { prefix: '/news' });
 
   try {
-    const address = await app.listen({ port: PORT, host: '0.0.0.0' });
+    await app.listen({ port: PORT, host: '0.0.0.0' });
     console.log(`Starting server on port ${PORT}... 🚀`);
-    console.log(`server listening on ${address}`);
+    console.log(`server listening on http://0.0.0.0:${PORT}`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
