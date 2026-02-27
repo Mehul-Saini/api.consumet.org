@@ -1,5 +1,4 @@
 import fastify from 'fastify';
-import FastifyCors from '@fastify/cors';
 
 import animeRouter from './routes/anime';
 import mangaRouter from './routes/manga';
@@ -17,10 +16,21 @@ const start = async (): Promise<void> => {
     logger: true,
   });
 
-  // ✅ Allow all origins so Cloudflare Pages can access this API
-  await app.register(FastifyCors, {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  // ✅ Add CORS headers to ALL responses — no extra packages needed
+  app.addHook('onSend', async (request, reply) => {
+    reply.header('Access-Control-Allow-Origin', '*');
+    reply.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  });
+
+  // ✅ Handle OPTIONS preflight requests
+  app.options('*', async (request, reply) => {
+    reply
+      .header('Access-Control-Allow-Origin', '*')
+      .header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+      .header('Access-Control-Allow-Headers', 'Content-Type, Accept')
+      .status(204)
+      .send();
   });
 
   app.get('/', async (request, reply) => {
